@@ -33,6 +33,23 @@ function tb_init(){
     include(plugin_dir_path(__FILE__). "/insert-marker.php");
 }
 
+add_action( 'wp_ajax_get_markers', 'get_markers' );
+add_action( 'wp_ajax_nopriv_get_markers', 'get_markers' );
+function get_markers(){
+    global $wpdb;
+    $tblname = 'markers';
+    $wp_track_table = $wpdb->prefix . "$tblname ";
+
+    $markers = $wpdb->get_results(
+        "
+        SELECT *
+        FROM $wp_track_table
+        "
+    );
+    echo json_encode($markers);
+    die();
+}
+
 function tb_map($att) {
     wp_enqueue_script( 'ajax-script', plugins_url( '/js/map.js', __FILE__ ), array('jquery') );
 
