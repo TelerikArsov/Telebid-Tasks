@@ -1,22 +1,45 @@
 <?php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    echo "SAVING ENTRY";
     if (! isset($_POST['nonce_marker']) || ! wp_verify_nonce( $_POST['nonce_marker'], 'add_marker' )) {
          echo 'Security error. Do not process the form.';
          return;
     }
-
-    insert_row();
+    if(isset($_POST['alot'])) {
+        echo "SAVING A LOT";
+        insert_alot();
+    }else{
+        insert_row($_POST['location_name'], $_POST['lat'], $_POST['lng']);
+    }
 }
-function insert_row() {
+function insert_alot(){
+    $ammount = $_POST['ammount'];
+    if(!isset($ammount) || trim($ammount) == ''){
+        echo 'VEry wrong';
+    }else {
+        for($i = 0; $i < intval($ammount); $i++){
+            $json = file_get_contents("https://api.3geonames.org/?randomland=yes&json=1");
+            $json = json_decode($json);
+            $lat = $json->{'nearest'}->{'latt'};
+            $lng = $json->{'nearest'}->{'longt'};
+            $name = $json->{'threegeonames'};
+            insert_row($name, $lat, $lng);
+        }
+    }
+}
+function insert_row($name, $lat, $lng) {
     global $wpdb;
     $tblname = 'markers';
     $wp_track_table = $wpdb->prefix. "$tblname";
-    $name = $_POST['location_name'];
-    $lat = $_POST['lat'];
-    $lng = $_POST['lng'];
-    $wpdb->insert( $wp_track_table,
+    if(!isset($name) || trim($name) == ''
+    || !isset($lat) || trim($lat) == ''
+    || !isset($lng) || trim($lng) == '')
+    {
+        echo "Wrong input";
+    }
+    else
+    {
+        $wpdb->insert( $wp_track_table,
         array( 
             'name' => $name, 
             'lat' => $lat,
@@ -27,6 +50,9 @@ function insert_row() {
             '%f',
             '%f' 
         ) );
+        #echo "SAVING ENTRY";
+    }
+    
 }
 ?>
 
@@ -43,6 +69,15 @@ function insert_row() {
         <label for="lng">Lng:</label>
         <input type="text" name="lng" id="lng">
     </p>
-    <input type="submit" value="Submit">
+    <input name="submit" type="submit" value="Submit">
+    <?php wp_nonce_field( 'add_marker', 'nonce_marker' ); ?>
+</form>
+
+<form method="POST">
+    <p>
+        <label for="ammount">Ammount:</label>
+        <input type="text" name="ammount" id="ammount">
+    </p>
+    <input name="alot" type="submit" value="Add a lot">
     <?php wp_nonce_field( 'add_marker', 'nonce_marker' ); ?>
 </form>
