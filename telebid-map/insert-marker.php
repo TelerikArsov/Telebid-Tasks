@@ -1,5 +1,6 @@
 <?php
 global $first_time, $conn, $stmt, $servername, $username, $password, $dbname;
+define("MYSQL_CODE_DUPLICATE_KEY", 1062);
 $servername = "localhost";
 $username = "";
 $password = ""; #own
@@ -20,28 +21,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 function insert_alot(){
+    global $conn, $stmt, $wpdb;
     $ammount = $_POST['ammount'];
     if(!isset($ammount) || trim($ammount) == ''){
-        echo 'VEry wrong';
+        echo 'Ammount not set properly';
     }else {
         $start = microtime(true);
         for($i = 0; $i < intval($ammount); $i++){
             $json = get_coords('default');
             $json = json_decode($json);
-            $lat = $json->{'nearest'}->{'latt'};
-            $lng = $json->{'nearest'}->{'longt'};
-            $name = $json->{'threegeonames'};
-            insert_row($name, $lat, $lng);
+            $args = array(
+                'lat,d'           => (float)clear_var($json->{'nearest'}->{'latt'}),
+                'lng,d'           => (float)clear_var($json->{'nearest'}->{'longt'}),
+                'geonumber,s'     => $json->{'geonumber'},
+                'threegeonames,s' => $json->{'threegeonames'},
+                'geocode,s'       => $json->{'geocode'},
+                'altgeocode,s'    => $json->{'nearest'}->{'altgeocode'},
+                'elevation,i'     => (int)clear_var($json->{'nearest'}->{'elevation'}),
+                'timezone,s'      => clear_var($json->{'nearest'}->{'timezone'}),
+                'city,s'          => clear_var($json->{'nearest'}->{'city'}),
+                'prov,s'          => clear_var($json->{'nearest'}->{'prov'}),
+                'region,s'        => clear_var($json->{'nearest'}->{'region'}),
+                'state,s'         => clear_var($json->{'nearest'}->{'state'}),
+                'name,s'          => clear_var(array_key_exists('name', $json->{'nearest'}) 
+                                                                    ? $json->{'nearest'}->{'name'} 
+                                                                    : $json->{'nearest'}->{'city'})
+            );
+            insert_row_raw($args);
+            if((isset($conn) && $conn->errno) == MYSQL_CODE_DUPLICATE_KEY ||
+            $wpdb->last_error) {
+                echo "Cant add marker: ", $args['name,s'], PHP_EOL;
+            }
         }
-        echo $time_elapsed_secs = microtime(true) - $start;
-        global $conn, $stmt;
+        echo "Elapsed: ", ($time_elapsed_secs = microtime(true) - $start), PHP_EOL;
         if (isset($conn) && mysqli_ping($conn)){
-            $stmt->close();
             $conn->close();
         }
     }
 }
-
+function clear_var($var){
+    if($var instanceof stdClass){
+        return null;
+    }else {
+        return $var;
+    }
+}
 function get_coords($type)
 {
     $data = null;
@@ -52,8 +76,7 @@ function get_coords($type)
     }
     return $data;
 }
-
-function insert_row_raw($name, $lat, $lng){
+function insert_row_raw(array $args){
     global $first_time, $stmt, $conn;
     if($first_time == 1) {
         global $servername, $username, $password, $dbname;
@@ -61,11 +84,27 @@ function insert_row_raw($name, $lat, $lng){
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }
-        $stmt = $conn->prepare("INSERT INTO wp_markers (name, lat, lng) VALUES (?, ?, ?)");
-        $stmt->bind_param("sdd", $name, $lat, $lng);
         $first_time = 0;
     }
-    $stmt->execute();  
+    if(!is_null($args['lat,d']) && !is_null($args['lng,d']) &&
+    !is_null($args['city,s'])){
+        $values = array_values($args);
+        $keys = '';
+        $types = '';
+        foreach(array_keys($args) as $key) {
+            $tokens = explode(',', $key);
+            $keys .= $tokens[0]. ', ';
+            $types .= $tokens[1];
+        }
+        $keys = substr($keys, 0, -2);
+        $placeholders = str_repeat('?, ', count($values) - 1 ). '?';
+        #echo $types, ' ', $placeholders, ' ', $keys, PHP_EOL;
+        $stmt = $conn->prepare("INSERT INTO wp_markers ($keys) 
+                            VALUES ($placeholders)");
+        $stmt->bind_param($types, ...$values);
+        $stmt->execute();
+        $stmt->close();
+    }
 }
 
 function insert_row($name, $lat, $lng) {
