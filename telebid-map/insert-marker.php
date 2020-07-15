@@ -8,6 +8,7 @@ $dbname = "";
 $first_time = 1;
 $conn = null;
 $stmt = null;
+$requesting = False;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (! isset($_POST['nonce_marker']) || ! wp_verify_nonce( $_POST['nonce_marker'], 'add_marker' )) {
@@ -21,43 +22,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 function insert_alot(){
-    global $conn, $stmt, $wpdb;
-    $ammount = $_POST['ammount'];
-    if(!isset($ammount) || trim($ammount) == ''){
-        echo 'Ammount not set properly';
-    }else {
-        $start = microtime(true);
-        for($i = 0; $i < intval($ammount); $i++){
-            $json = get_coords('default');
-            $json = json_decode($json);
-            $args = array(
-                'lat,d'           => (float)clear_var($json->{'nearest'}->{'latt'}),
-                'lng,d'           => (float)clear_var($json->{'nearest'}->{'longt'}),
-                'geonumber,s'     => $json->{'geonumber'},
-                'threegeonames,s' => $json->{'threegeonames'},
-                'geocode,s'       => $json->{'geocode'},
-                'altgeocode,s'    => $json->{'nearest'}->{'altgeocode'},
-                'elevation,i'     => (int)clear_var($json->{'nearest'}->{'elevation'}),
-                'timezone,s'      => clear_var($json->{'nearest'}->{'timezone'}),
-                'city,s'          => clear_var($json->{'nearest'}->{'city'}),
-                'prov,s'          => clear_var($json->{'nearest'}->{'prov'}),
-                'region,s'        => clear_var($json->{'nearest'}->{'region'}),
-                'state,s'         => clear_var($json->{'nearest'}->{'state'}),
-                'name,s'          => clear_var(array_key_exists('name', $json->{'nearest'}) 
-                                                                    ? $json->{'nearest'}->{'name'} 
-                                                                    : $json->{'nearest'}->{'city'})
-            );
-            insert_row_raw($args);
-            if((isset($conn) && $conn->errno) == MYSQL_CODE_DUPLICATE_KEY ||
-            $wpdb->last_error) {
-                echo "Cant add marker: ", $args['name,s'], PHP_EOL;
+    global $conn, $stmt, $wpdb, $requesting;
+    if(!$requesting){
+        $requesting = True;
+        $ammount = $_POST['ammount'];
+        if(!isset($ammount) || trim($ammount) == ''){
+            echo 'Ammount not set properly';
+        }else {
+            $start = microtime(true);
+            for($i = 0; $i < intval($ammount); $i++){
+                $json = get_coords('default');
+                $json = json_decode($json);
+                $args = array(
+                    'lat,d'           => (float)clear_var($json->{'nearest'}->{'latt'}),
+                    'lng,d'           => (float)clear_var($json->{'nearest'}->{'longt'}),
+                    'geonumber,s'     => $json->{'geonumber'},
+                    'threegeonames,s' => $json->{'threegeonames'},
+                    'geocode,s'       => $json->{'geocode'},
+                    'altgeocode,s'    => $json->{'nearest'}->{'altgeocode'},
+                    'elevation,i'     => (int)clear_var($json->{'nearest'}->{'elevation'}),
+                    'timezone,s'      => clear_var($json->{'nearest'}->{'timezone'}),
+                    'city,s'          => clear_var($json->{'nearest'}->{'city'}),
+                    'prov,s'          => clear_var($json->{'nearest'}->{'prov'}),
+                    'region,s'        => clear_var($json->{'nearest'}->{'region'}),
+                    'state,s'         => clear_var($json->{'nearest'}->{'state'}),
+                    'name,s'          => clear_var(array_key_exists('name', $json->{'nearest'}) 
+                                                                        ? $json->{'nearest'}->{'name'} 
+                                                                        : $json->{'nearest'}->{'city'})
+                );
+                insert_row_raw($args);
+                if((isset($conn) && $conn->errno) == MYSQL_CODE_DUPLICATE_KEY ||
+                $wpdb->last_error) {
+                    echo "Cant add marker: ", $args['name,s'], PHP_EOL;
+                }
+            }
+            echo "Elapsed: ", ($time_elapsed_secs = microtime(true) - $start), PHP_EOL;
+            if (isset($conn) && mysqli_ping($conn)){
+                $conn->close();
             }
         }
-        echo "Elapsed: ", ($time_elapsed_secs = microtime(true) - $start), PHP_EOL;
-        if (isset($conn) && mysqli_ping($conn)){
-            $conn->close();
-        }
+        echo "done";
+        $requesting = False;
     }
+    
 }
 function clear_var($var){
     if($var instanceof stdClass){
