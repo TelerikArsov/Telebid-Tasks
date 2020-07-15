@@ -53,8 +53,8 @@ function get_markers(){
                 $filter_query .= " AND ";
             }
             $filter_query .= ($key. " = '". $value. "'");
-        }        
-        $count++;
+            $count++;
+        }
     }
     $filter_query .= ";";
     $markers = $wpdb->get_results($filter_query);
