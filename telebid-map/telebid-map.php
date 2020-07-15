@@ -39,14 +39,41 @@ function get_markers(){
     global $wpdb;
     $tblname = 'markers';
     $wp_track_table = $wpdb->prefix . "$tblname ";
-
-    $markers = $wpdb->get_results(
-        "
+    $filter_data = $_POST['filter_data'];
+    $filter_query =
+    "
         SELECT *
+        FROM $wp_track_table ";
+    $count = 0;
+    foreach($filter_data as $key => $value) {
+        if($value != ''){
+            if($count == 0) {
+                $filter_query .= " WHERE ";
+            }else if($count > 0){
+                $filter_query .= " AND ";
+            }
+            $filter_query .= ($key. " = '". $value. "'");
+        }        
+        $count++;
+    }
+    $filter_query .= ";";
+    $markers = $wpdb->get_results($filter_query);
+    $state = $filter_data['state'];
+    $region = $wpdb->get_results(
+        "
+        SELECT DISTINCT region
         FROM $wp_track_table
+        WHERE state = '$state';
         "
     );
-    echo json_encode($markers);
+    $prov = $wpdb->get_results(
+        "
+        SELECT DISTINCT prov
+        FROM $wp_track_table
+        WHERE state = '$state';
+        "
+    );
+    echo json_encode(array('markers' => $markers, 'prov' => $prov, 'region' =>  $region));
     die();
 }
 
