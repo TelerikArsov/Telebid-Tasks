@@ -6,7 +6,7 @@ jQuery(document).ready(function($) {
         var gmarkers = [];
         var stateChanged = false;
         var filterOptions = ['prov', 'region'];
-        var filterInput = ['state', 'city']
+        var filterInput = { 'input': ['state', 'city'], 'cords': ['NWLat', 'NWLon', 'SELat', 'SELon']};
         var infoWindow = new google.maps.InfoWindow;
         $('#stateFilter').on('change input', function(){
             stateChanged = true
@@ -19,21 +19,24 @@ jQuery(document).ready(function($) {
         $('#filter').click(filter);
         function filter() {
             clearOverlays();
-            var filter_data = {};
-            $.each(filterInput, function(_, value){
-                filter_data[value] = $('#' + value + 'Filter').val();
+            var filter_data = {'input': {}, 'cords': {}};
+            $.each(filterInput, function(key, value){
+                $.each(value, function(_, val) {
+                    filter_data[key][val] = $('#' + val + 'Filter').val();
+                })
             });
-            var formattedName = filter_data['state'].toLowerCase();
+            console.log(filter_data['input'])
+            var formattedName = filter_data['input']['state'].toLowerCase();
             console.log(formattedName);
             if(isoCountries.hasOwnProperty(formattedName)) {
-                filter_data['state'] = isoCountries[formattedName];
+                filter_data['input']['state'] = isoCountries[formattedName];
             }
             $.each(filterOptions, function(_, value){
                 var filterValue = $("#" + value + 'Filter' + ' :selected').val();
                 if(filterValue.toLowerCase() == "null")
-                    filter_data[value] = "";    
+                    filter_data['input'][value] = "";    
                 else
-                    filter_data[value] = filterValue;
+                    filter_data['input'][value] = filterValue;
             });
             console.log(filter_data);
             $.ajax(

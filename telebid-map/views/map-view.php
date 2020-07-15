@@ -30,6 +30,7 @@
         display: flex;
         align-items: center;
         margin-bottom: 1em;
+        margin-top: 0.5em;
     }
     li{
         background-color: black;
@@ -55,7 +56,19 @@
     </div>
     <div>
         <label for="cityFilter">City</label>
-        <input type="text" id="cityFilter" name="filter" autocomplete="off">
+        <input type="text" id="cityFilter" name="cityFilter" autocomplete="off">
+    </div>
+    <div>
+        <label for="NWLatFilter">NE lat</label>
+        <input type="number" step="any" id="NWLatFilter" name="NWLatFilter">
+        <label for="NWLonFilter">NE lon</label>
+        <input type="number" step="any" id="NWLonFilter" name="NWLonFilter">
+    </div>
+    <div>
+        <label for="SELatFilter">SE lat</label>
+        <input type="number" step="any" id="SELatFilter" name="SELatFilter">
+        <label for="SELonFilter">SE lon</label>
+        <input type="number" step="any" id="SELonFilter" name="SELonFilter">
     </div>
 </div>
 <button type="button" id="filter">Filter</button>

@@ -39,13 +39,14 @@ function get_markers(){
     global $wpdb;
     $tblname = 'markers';
     $wp_track_table = $wpdb->prefix . "$tblname ";
-    $filter_data = $_POST['filter_data'];
+    $filter_input = $_POST['filter_data']['input'];
+    $filter_cords = $_POST['filter_data']['cords'];
     $filter_query =
     "
         SELECT *
         FROM $wp_track_table ";
     $count = 0;
-    foreach($filter_data as $key => $value) {
+    foreach($filter_input as $key => $value) {
         if($value != ''){
             if($count == 0) {
                 $filter_query .= " WHERE ";
@@ -56,9 +57,19 @@ function get_markers(){
             $count++;
         }
     }
+    if(isset($filter_cords['NWLat']) && isset($filter_cords['NWLon']) &&
+       isset($filter_cords['SELat']) && isset($filter_cords['SELon'])) {
+        if($count == 0) {
+            $filter_query .= " WHERE ";
+        }else if($count > 0){
+            $filter_query .= " AND ";
+        }
+        $filter_query .= ("(lat <= ". $filter_cords['NWLat']. "and lat >= ". $filter_cords['SELat']. 
+        ") and (lng >= ". $filter_cords['NWLon']. "and lng <= ". $filter_cords['SELon']. ")");
+    }
     $filter_query .= ";";
     $markers = $wpdb->get_results($filter_query);
-    $state = $filter_data['state'];
+    $state = $filter_input['state'];
     $region = $wpdb->get_results(
         "
         SELECT DISTINCT region
