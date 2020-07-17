@@ -1,0 +1,30 @@
+<script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+<script type=text/javascript>
+    $(function() {
+        $('form').on('submit', function(event) {
+            $.ajax({
+                data: {
+                    sname: $('#sname').val()
+                },
+                type: 'POST',
+                url: '/filter',
+                success: function(data){
+                    $('#result').text("Ekatte ID: " + data['sett_info'][0] +
+                    " " + data['sett_info'][2] + data['sett_info'][1] + 
+                    " Област: " + data['area_info'][1] + " код на област: " +
+                    data['area_info'][0] + " Община: " + data['muni_info'][1] +
+                    " Код на община: " + data['muni_info'][0])
+                    console.log(data)
+                }
+            })
+            event.preventDefault();
+        });
+    });
+</script>
+<h1>jQuery Example</h1>
+<form method="POST" action="{{ url_for('filter') }}">
+    <label for="sname">Settlement name:</label><br>
+    <input type="text" id="sname" name="sname"><br>
+    <button id="filter" type="submit">submit</button>
+</form> 
+<p id="result"></p>

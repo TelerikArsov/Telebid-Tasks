@@ -75,6 +75,30 @@ def create_muni_sett(connection, muni_path, sett_path):
     cursor.close()
 
 
+def find_sett_info(sett_name):
+    result = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        findquery = """ SELECT * FROM settlements WHERE name LIKE %(like)s """
+        cursor.execute(findquery, dict(like= '%'+sett_name+'%'))
+        sett_info = cursor.fetchone()
+        area_info = None
+        muni_info = None
+        if sett_info is not None:
+            cursor.execute(""" SELECT * FROM municipalities WHERE id = %s""", (sett_info[3],))
+            muni_info = cursor.fetchone()
+        if muni_info is not None:
+            cursor.execute(""" SELECT * FROM areas WHERE id = %s""", (muni_info[2],))
+            area_info = cursor.fetchone()
+        result = {'sett_info': sett_info, 'muni_info': muni_info, 'area_info': area_info}
+    except (Exception, psycopg2.Error) as error :
+        print ("Error while connecting to PostgreSQL", error)
+    finally:
+        #closing database connection.
+        cursor.close()
+        close_connection(connection)
+    return result
 
 def insert_data(area_path, muni_path, sett_path):
     try:
@@ -86,8 +110,4 @@ def insert_data(area_path, muni_path, sett_path):
     finally:
         #closing database connection.
         close_connection(connection)
-try:
-    insert_data(area, muni, sett)
-
-except (Exception, psycopg2.Error) as error :
-    print ("Error while connecting to PostgreSQL", error)
+#print(find_sett('Абл'))
