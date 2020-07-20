@@ -100,7 +100,7 @@ def find_sett_info(sett_name):
         close_connection(connection)
     return result
 
-def insert_data(area_path, muni_path, sett_path):
+def insert_data(area_path=area, muni_path=muni, sett_path=sett):
     try:
         connection = get_connection()
         create_area(connection, area_path)
@@ -110,4 +110,6 @@ def insert_data(area_path, muni_path, sett_path):
     finally:
         #closing database connection.
         close_connection(connection)
-#print(find_sett('Абл'))
+
+if __name__ == "__main__":
+    insert_data()
