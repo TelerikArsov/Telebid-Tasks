@@ -76,22 +76,23 @@ def create_muni_sett(connection, muni_path, sett_path):
 
 
 def find_sett_info(sett_name):
-    result = None
+    result = []
     try:
         connection = get_connection()
         cursor = connection.cursor()
         findquery = """ SELECT * FROM settlements WHERE name LIKE %(like)s """
         cursor.execute(findquery, dict(like= '%'+sett_name+'%'))
-        sett_info = cursor.fetchone()
+        sett_infos = cursor.fetchall()
         area_info = None
         muni_info = None
-        if sett_info is not None:
-            cursor.execute(""" SELECT * FROM municipalities WHERE id = %s""", (sett_info[3],))
-            muni_info = cursor.fetchone()
-        if muni_info is not None:
-            cursor.execute(""" SELECT * FROM areas WHERE id = %s""", (muni_info[2],))
-            area_info = cursor.fetchone()
-        result = {'sett_info': sett_info, 'muni_info': muni_info, 'area_info': area_info}
+        for sett_info in sett_infos:
+            if sett_info is not None:
+                cursor.execute(""" SELECT * FROM municipalities WHERE id = %s""", (sett_info[3],))
+                muni_info = cursor.fetchone()
+            if muni_info is not None:
+                cursor.execute(""" SELECT * FROM areas WHERE id = %s""", (muni_info[2],))
+                area_info = cursor.fetchone()
+            result.append({'sett_info': sett_info, 'muni_info': muni_info, 'area_info': area_info})
     except (Exception, psycopg2.Error) as error :
         print ("Error while connecting to PostgreSQL", error)
     finally:
@@ -112,4 +113,5 @@ def insert_data(area_path=area, muni_path=muni, sett_path=sett):
         close_connection(connection)
 
 if __name__ == "__main__":
-    insert_data()
+    #insert_data()
+    print(find_sett_info("Абл"))
