@@ -24,7 +24,8 @@
                 url: '/filter',
                 success: function(data){
                     table.clear().draw();
-                    table.rows.add(data).draw();
+                    $('#searched_query').text("Search text: " + data['query']);
+                    table.rows.add(data['result']).draw();
                     /*data.forEach(function(el) {
                         table.row.add(el).draw();
                         console.log(el);
@@ -51,7 +52,8 @@
     <label for="sname">Settlement name:</label><br>
     <input type="text" id="sname" name="sname"><br>
     <button id="filter" type="submit">submit</button>
-</form> 
+</form> <br>
+<p id="searched_query"></p>
 <table id="filter_results" class="display">
     <thead>
         <tr>

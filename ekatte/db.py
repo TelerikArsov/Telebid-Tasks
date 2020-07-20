@@ -98,7 +98,7 @@ def get_stats():
     return result
 
 def find_sett_info(sett_name):
-    result = []
+    result = {'query': sett_name, 'result': []}
     try:
         connection = get_connection()
         cursor = connection.cursor()
@@ -114,7 +114,7 @@ def find_sett_info(sett_name):
             if muni_info is not None:
                 cursor.execute(""" SELECT * FROM areas WHERE id = %s""", (muni_info[2],))
                 area_info = cursor.fetchone()
-            result.append({'sett_id': sett_info[0], 'sett_name': sett_info[2] + sett_info[1],
+            result['result'].append({'sett_id': sett_info[0], 'sett_name': sett_info[2] + sett_info[1],
                 'muni_id': muni_info[0], 'muni_name': muni_info[1],
                 'area_id': area_info[0], 'area_name': area_info[1]})
     except (Exception, psycopg2.Error) as error :
