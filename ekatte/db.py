@@ -92,7 +92,9 @@ def find_sett_info(sett_name):
             if muni_info is not None:
                 cursor.execute(""" SELECT * FROM areas WHERE id = %s""", (muni_info[2],))
                 area_info = cursor.fetchone()
-            result.append({'sett_info': sett_info, 'muni_info': muni_info, 'area_info': area_info})
+            result.append({'sett_id': sett_info[0], 'sett_name': sett_info[2] + sett_info[1],
+                'muni_id': muni_info[0], 'muni_name': muni_info[1],
+                'area_id': area_info[0], 'area_name': area_info[1]})
     except (Exception, psycopg2.Error) as error :
         print ("Error while connecting to PostgreSQL", error)
     finally:
@@ -113,5 +115,5 @@ def insert_data(area_path=area, muni_path=muni, sett_path=sett):
         close_connection(connection)
 
 if __name__ == "__main__":
-    #insert_data()
-    print(find_sett_info("Абл"))
+    insert_data()
+    #print(find_sett_info("Абл"))

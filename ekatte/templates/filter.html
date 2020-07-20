@@ -1,6 +1,20 @@
 <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
 <script type=text/javascript>
-    $(function() {
+    $(document).ready( function () {
+        var table = $('#filter_results').DataTable( {
+            paging: false,
+            scrollY: 400,
+            columns: [
+                { data: 'sett_id' },
+                { data: 'sett_name' },
+                { data: 'muni_id' },
+                { data: 'muni_name' },
+                { data: 'area_id'},
+                { data: 'area_name'}
+            ]
+        } );
         $('form').on('submit', function(event) {
             $.ajax({
                 data: {
@@ -9,12 +23,12 @@
                 type: 'POST',
                 url: '/filter',
                 success: function(data){
-                    $('#result').text("Ekatte ID: " + data['sett_info'][0] +
-                    " " + data['sett_info'][2] + data['sett_info'][1] + 
-                    " Област: " + data['area_info'][1] + " код на област: " +
-                    data['area_info'][0] + " Община: " + data['muni_info'][1] +
-                    " Код на община: " + data['muni_info'][0])
-                    console.log(data)
+                    table.clear().draw();
+                    table.rows.add(data).draw();
+                    /*data.forEach(function(el) {
+                        table.row.add(el).draw();
+                        console.log(el);
+                    });*/
                 }
             })
             event.preventDefault();
@@ -27,4 +41,18 @@
     <input type="text" id="sname" name="sname"><br>
     <button id="filter" type="submit">submit</button>
 </form> 
-<p id="result"></p>
+<table id="filter_results" class="display">
+    <thead>
+        <tr>
+            <th>Settlement Id</th>
+            <th>Settlement Name</th>
+            <th>Municipality Id</th>
+            <th>Municipality Name</th>
+            <th>Area Id</th>
+            <th>Area Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+    </tbody>
+</table>
