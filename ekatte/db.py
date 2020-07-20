@@ -33,6 +33,7 @@ def create_area(connection, area_path):
                 cursor.execute(postgres_insert_query, (row[cols[0]], row[cols[1]], row[cols[2]]))
         except (Exception, psycopg2.Error) as error :
             print("Error while inserting into area", error)
+            connection.rollback()
     
     connection.commit()
     cursor.close()
