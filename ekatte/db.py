@@ -5,10 +5,10 @@ import psycopg2
 import os
 
 import pandas as pd
-dfs = pd.read_excel('/home/telerik/Downloads/Ekatte/Ekatte_xlsx/Ek_obl.xlsx', usecols=['oblast', 'name', 'region'])
-area = '/home/telerik/Downloads/Ekatte/Ekatte_xlsx/Ek_obl.xlsx'
-sett = '/home/telerik/Downloads/Ekatte/Ekatte_xlsx/Ek_atte.xlsx'
-muni = '/home/telerik/Downloads/Ekatte/Ekatte_xlsx/Ek_obst.xlsx'
+dfs = pd.read_excel('./Ek_obl.xlsx', usecols=['oblast', 'name', 'region'])
+area = './Ek_obl.xlsx'
+sett = './Ek_atte.xlsx'
+muni = './Ek_obst.xlsx'
 def get_connection():
     connection = psycopg2.connect(user = os.environ.get("db-username"),
                                   password = os.environ.get("db-password"),
