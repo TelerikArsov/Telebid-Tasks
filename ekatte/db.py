@@ -74,6 +74,27 @@ def create_muni_sett(connection, muni_path, sett_path):
             connection.rollback()
     cursor.close()
 
+def get_stats():
+    from psycopg2.extensions import AsIs
+    result = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        statquery = """ SELECT count(*) FROM %s """
+        cursor.execute(statquery, (AsIs("settlements"),))
+        sett_stats = cursor.fetchone()
+        cursor.execute(statquery, (AsIs("areas"),))
+        area_stats = cursor.fetchone()
+        cursor.execute(statquery, (AsIs("municipalities"),))
+        muni_stats = cursor.fetchone()
+        result = {'sett_stat': sett_stats[0], 'muni_stat': muni_stats[0], 'area_stat': area_stats[0]}
+    except (Exception, psycopg2.Error) as error :
+        print ("Error while connecting to PostgreSQL", error)
+    finally:
+        #closing database connection.
+        cursor.close()
+        close_connection(connection)
+    return result
 
 def find_sett_info(sett_name):
     result = []

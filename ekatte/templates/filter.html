@@ -33,6 +33,17 @@
             })
             event.preventDefault();
         });
+        $('#stat').click(function (event) {
+            $.ajax({
+                type: 'POST',
+                url: '/stats',
+                success: function (data) {
+                    $('#stat_results').text("Settlements count: " + data['sett_stat'] +
+                    " Municipalities count: " + data['muni_stat'] + " Areas count: " + data['area_stat']);
+                    console.log(data);
+                }
+            });
+        });
     });
 </script>
 <h1>jQuery Example</h1>
@@ -56,3 +67,7 @@
         
     </tbody>
 </table>
+<hr>
+<label for="stat">Stats for tables in db</label><br><br>
+<button id="stat" type="submit">Get stats</button>
+<p id="stat_results"></p>
