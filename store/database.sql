@@ -32,10 +32,19 @@ create table users(
     id serial primary key,
     username varchar(30) unique not null,
     password text not null,
-    email text not null,
+    email text unique not null,
+    created_on timestamp not null,
+    last_login timestamp
+);
+
+create table workers(
+    id serial primary key,
+    username varchar(30) unique not null,
+    password text not null,
+    email text unique not null,
     created_on timestamp not null,
     last_login timestamp,
-    role text not null
+    role text
 );
 
 create table cart(
@@ -49,7 +58,8 @@ create table cart_items(
     product_id int REFERENCES products(id),
     quantity int not null,
     created_date timestamp not null,
-    cart_id int REFERENCES cart(id)
+    cart_id int REFERENCES cart(id),
+    price money not null
 );
 
 create table orders(
@@ -65,4 +75,10 @@ create table product_ratings(
     user_id int REFERENCES users(id),
     product_id int REFERENCES products(id),
     rating smallint not null
+);
+
+create table product_quantity(
+    id serial primary key,
+    product_id int REFERENCES products(id),
+    quantity int not null
 );
