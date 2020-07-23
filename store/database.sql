@@ -1,36 +1,36 @@
 create table tags(
-    id serial primary key,
+    id bigserial primary key,
     name text unique not null,
-    color varchar(10),
+    color text default '#808080',
     visible boolean not null
 );
 
 create table categories(
-    id serial primary key,
+    id bigserial primary key,
     name text unique not null,
-    color varchar(10),
+    color text default '#808080',
     visible boolean not null
 );
 
 create table products(
-    id serial primary key,
+    id bigserial primary key,
     name text unique not null,
     manifacturer text not null,
     description text not null,
-    cost money not null,
-    category_id int REFERENCES categories(id),
+    cost bigint not null,
+    category_id bigint REFERENCES categories(id),
     visible boolean not null
 );
 
 create table product_tags(
-    id serial primary key,
-    product_id int REFERENCES products(id),
-    tag_id int REFERENCES tags(id)
+    id bigserial primary key,
+    product_id bigint REFERENCES products(id),
+    tag_id bigint REFERENCES tags(id)
 );
 
 create table users(
-    id serial primary key,
-    username varchar(30) unique not null,
+    id bigserial primary key,
+    username text unique not null,
     password text not null,
     email text unique not null,
     created_on timestamp not null,
@@ -38,8 +38,8 @@ create table users(
 );
 
 create table workers(
-    id serial primary key,
-    username varchar(30) unique not null,
+    id bigserial primary key,
+    username text unique not null,
     password text not null,
     email text unique not null,
     created_on timestamp not null,
@@ -48,37 +48,47 @@ create table workers(
 );
 
 create table cart(
-    id serial primary key,
-    user_id int REFERENCES users(id),
+    id bigserial primary key,
+    user_id bigint REFERENCES users(id),
     created_date timestamp not null
 );
 
 create table cart_items(
-    id serial primary key,
-    product_id int REFERENCES products(id),
+    id bigserial primary key,
+    product_id bigint REFERENCES products(id),
     quantity int not null,
     created_date timestamp not null,
-    cart_id int REFERENCES cart(id),
-    price money not null
+    cart_id bigint REFERENCES cart(id),
+    price bigint not null
 );
 
 create table orders(
-    id serial primary key,
-    cart_id int REFERENCES cart(id),
-    payed money not null,
+    id bigserial primary key,
+    user_id bigint REFERENCES users(id),
+    payed bigint not null,
     reciever_name text not null,
-    address text not null
+    address text not null,
+    created_date timestamp not null
+);
+
+create table order_items(
+    id bigserial primary key,
+    product_id bigint REFERENCES products(id),
+    quantity int not null,
+    created_date timestamp not null,
+    order_id bigint REFERENCES orders(id),
+    price bigint not null
 );
 
 create table product_ratings(
-    id serial primary key,
-    user_id int REFERENCES users(id),
-    product_id int REFERENCES products(id),
+    id bigserial primary key,
+    user_id bigint REFERENCES users(id),
+    product_id bigint REFERENCES products(id),
     rating smallint not null
 );
 
 create table product_quantity(
-    id serial primary key,
-    product_id int REFERENCES products(id),
+    id bigserial primary key,
+    product_id bigint REFERENCES products(id),
     quantity int not null
 );
