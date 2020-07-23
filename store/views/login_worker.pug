@@ -1,0 +1,15 @@
+
+body
+  form(action='/worker/login', method='POST')
+    label(for='name') Username:
+    br
+    input(type='text', name='username', value='')
+    br
+    label(for='pass') Password:
+    br 
+    input(type='password', name='pass', value='')
+    br
+    input(type='submit', value='Submit')
+  if errors && errors.length  
+      for error in errors
+          div=error.msg 
