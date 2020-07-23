@@ -3,6 +3,9 @@ const express = require('express');
 const app = express();
 const port = 5000;
 
+app.set('views', './views')
+app.set('view engine', 'pug')
+
 const { Client } = require('pg');
 
 const client = new Client({
@@ -20,4 +23,8 @@ client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
 })
 
 app.listen(port, () => console.log(`Server started on port: ${port}`));
+
+app.get('/', function(req, res){
+    res.render('index', {title: "Hey", message: "Hello there!"})
+})
 
