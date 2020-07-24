@@ -15,9 +15,8 @@ const createUser = (req, res) => {
       if (error) {
         throw error
       }
-      res.status(201).send(`User added with ID: ${results.insertId}`)
+      res.redirect('/login')
     })
-    validate(req, res)
 }
 // to refactor reasue code?
 const loginUser = (req, res) => {
@@ -29,9 +28,9 @@ const loginUser = (req, res) => {
             throw error
         }
         if (results.rowCount == 1) {
-            session.username = username;
-            session.role = "user"
-            res.render('index', {itle: "Hey", message: "Hello there!", username: username})
+            req.session.user = username;
+            req.session.role = "user"
+            res.redirect('/')
         }
     })
 
@@ -44,12 +43,11 @@ const createWorker = (req, res) => {
       if (error) {
         throw error
       }
-      res.status(201).send(`worker added with ID: ${results.insertId}`)
+      res.redirect('/worker/login')
     })
 }
 
 const loginWorker = (req, res) => {
-    var session = req.session;
     const { username, pass } = req.body
     pool.query('Select username, password FROM workers WHERE username = $1 and password = $2', [username, pass],
     (error, results)=> {
@@ -57,8 +55,9 @@ const loginWorker = (req, res) => {
             throw error
         }
         if (results.rowCount == 1) {
-            session.username = username;
-            res.render('admin_panel', {username: username})
+            req.session.user = username;
+            req.session.role = "admin"
+            res.redirect('/admin')
         }
     })
 

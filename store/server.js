@@ -1,11 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const redis = require('redis');
+const redisStore = require('connect-redis')(session);
+const client  = redis.createClient();
 const bodyParser = require('body-parser');
 const app = express();
 const port = 5000;
 
-app.use(session({secret: process.env.SESSIONSECRET,saveUninitialized: true,resave: true}));
+app.use(session({secret: process.env.SESSIONSECRET,
+    store: new redisStore({ host: 'localhost', port: 6379, client: client,ttl : 260}),
+    saveUninitialized: false,
+    resave: false}));
 app.use(bodyParser.json());      
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('views', './views')
@@ -20,8 +26,8 @@ const db = require('./queries')
 app.listen(port, () => console.log(`Server started on port: ${port}`));
 
 app.get('/', function(req, res){
-    var session = req.session;
-    res.render('index', {title: "Hey", message: "Hello there!", username: session.username})
+    console.log(req.session.user)
+    res.render('index', {title: "Hey", message: "Hello there!", username: req.session.user})
 });
 
 app.get('/register', function(req, res){
@@ -36,51 +42,60 @@ app.get('/login', function(req, res){
     res.render('login')
 });
 
+app.get('/admin', function(req, res){
+    res.render('admin_panel', {username: req.session.user})
+})
+
 app.post('/register', [
     check('username').notEmpty().withMessage('Username is required'),
     check('email').notEmpty().withMessage('Email is required'),
     check('email').isEmail().withMessage('Email is not valid'),
-    check('pass').notEmpty().withMessage('Password is required'),
-    check('repass').matches('pass').withMessage('Passwords do not match')
+    check('pass').notEmpty().withMessage('Password is required').custom((value, {req, loc, path}) => {
+        if(value !== req.body.repass){
+            throw new Error("Passwords do not match")
+        }else {
+            return value;
+        }
+    })
 ], function(req, res) {
-    var errors = validationResult(req).array()
-    if (errors) {
-        res.render('register', {errors: errors})
-    }else {
-        db.createUser(req, res)
-    }
-
+    handleErrors(req, res, db.createUser, 'register')
 });
 
 app.post('/logout', function(req, res){
-    var session = req.session;
-    delete session.username
-    console.log(session.username)
-    res.render('index', {title: "Hey", message: "Hello there!", username: session.username})
+    req.session.destroy(function(err){
+        if(err){
+            console.log(err);
+        } else {
+            res.redirect('/');
+        }
+    });
 })
 
 app.post('/worker/login', [
     check('username').notEmpty().withMessage('Username is required'),
     check('pass').notEmpty().withMessage('Password is required')
 ],  function(req, res) {
-    var errors = validationResult(req).array()
-    if (errors) {
-        res.render('login_worker', {errors: errors})
-    }else {
-        db.loginWorker(req, res)
-    }
-
+    handleErrors(req, res, db.loginWorker, 'login_worker')
 })
 
 app.post('/login', [
     check('username').notEmpty().withMessage('Username is required'),
     check('pass').notEmpty().withMessage('Password is required')
 ],  function(req, res) {
-    var errors = validationResult(req).array()
-    if (errors) {
-        res.render('login', {errors: errors})
-    }else {
-        db.loginUser(req, res)
-    }
-
+    handleErrors(req, res, db.loginUser, 'login')
 })
+
+
+function handleErrors(req, res, callback, errorPage){
+    var errors = validationResult(req).array()
+    if (errors.length) {
+        res.render(errorPage, {errors: errors})
+    }else {
+        try{
+            callback(req, res)
+        }catch (e) {
+            console.log(e);
+        }
+        
+    }
+}
