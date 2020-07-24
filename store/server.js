@@ -46,19 +46,41 @@ app.get('/admin', function(req, res){
     res.render('admin_panel', {username: req.session.user})
 })
 
+app.get('/account', function(req, res) {
+    if(req.session.user){
+        db.getUser(req, (prop) => res.render('account', prop))
+    }
+})
+
+var userFormValidation = 
+
 app.post('/register', [
     check('username').notEmpty().withMessage('Username is required'),
     check('email').notEmpty().withMessage('Email is required'),
     check('email').isEmail().withMessage('Email is not valid'),
-    check('pass').notEmpty().withMessage('Password is required').custom((value, {req, loc, path}) => {
+    check('pass').notEmpty().withMessage('Password is required').custom((value, {req}) => {
         if(value !== req.body.repass){
             throw new Error("Passwords do not match")
-        }else {
-            return value;
         }
+        return true;
     })
 ], function(req, res) {
     handleErrors(req, res, db.createUser, 'register')
+});
+
+app.post('/account', [
+    check('username').notEmpty().withMessage('Username is required'),
+    check('email').notEmpty().withMessage('Email is required'),
+    check('email').isEmail().withMessage('Email is not valid'),
+    check('pass').notEmpty().withMessage('Password is required'),
+    check('newpass').custom((value, {req}) => {
+        if(value !== req.body.repass){
+            throw new Error("Passwords do not match")
+        }
+        return true;
+    })
+], function(req, res) {
+    handleErrors(req, res, db.updateUser, 'account')
 });
 
 app.post('/logout', function(req, res){

@@ -20,9 +20,8 @@ const createUser = (req, res) => {
 }
 // to refactor reasue code?
 const loginUser = (req, res) => {
-    var session = req.session;
     const { username, pass } = req.body
-    pool.query('Select username, password FROM users WHERE username = $1 and password = $2', [username, pass],
+    pool.query('Select id, username FROM users WHERE username = $1 and password = $2', [username, pass],
     (error, results)=> {
         if (error) {
             throw error
@@ -30,11 +29,46 @@ const loginUser = (req, res) => {
         if (results.rowCount == 1) {
             req.session.user = username;
             req.session.role = "user"
-            res.redirect('/')
+            req.session.userId = results.rows[0]['id']  
         }
+        res.redirect('/')
     })
 
 }
+
+var getUser = (req, callback) => {
+    const username = req.session.user
+    if (username) {
+        pool.query('Select id, username, email FROM users WHERE username = $1 ', [username],
+        (error, results)=> {
+            if (error) {
+                throw error
+            }
+            if (results.rowCount == 1) {
+                callback(results.rows[0])
+            }
+        })
+    }
+}
+
+const updateUser = (req, res) => {
+    const { username, email, pass, newpass } = req.body
+    const id = req.session.userId
+    const newPassword = newpass == null ? pass : newpass;
+    if(id){
+        pool.query('UPDATE users SET username = $1, email = $2, password = $3 WHERE id = $4 and password = $5',
+        [username, email, newPassword, id, pass], (error, results) => {
+            if (error) {
+                throw error
+            }
+            req.session.user = username;
+            res.redirect('/account')
+        })
+    }
+    
+}
+
+// WORKERS
 
 const createWorker = (req, res) => {
     const { username, email, pass } = req.body
@@ -49,7 +83,7 @@ const createWorker = (req, res) => {
 
 const loginWorker = (req, res) => {
     const { username, pass } = req.body
-    pool.query('Select username, password FROM workers WHERE username = $1 and password = $2', [username, pass],
+    pool.query('Select id, username FROM workers WHERE username = $1 and password = $2', [username, pass],
     (error, results)=> {
         if (error) {
             throw error
@@ -57,6 +91,7 @@ const loginWorker = (req, res) => {
         if (results.rowCount == 1) {
             req.session.user = username;
             req.session.role = "admin"
+            req.session.userId = id;
             res.redirect('/admin')
         }
     })
@@ -66,6 +101,8 @@ const loginWorker = (req, res) => {
 module.exports = {
     createUser,
     loginUser,
+    getUser,
+    updateUser,
     createWorker,
     loginWorker
   }
