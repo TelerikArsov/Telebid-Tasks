@@ -9,7 +9,8 @@ body
         br 
         input(type='password', name='pass', value='')
         br
+        ul.errors
+            if errors
+                for error in errors
+                    li #{error.msg}
         input(type='submit', value='Submit')
-    if errors && errors.length  
-        for error in errors
-            div=error.msg 
