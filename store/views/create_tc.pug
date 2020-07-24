@@ -1,0 +1,77 @@
+body
+    block content
+        include mixins/tagCategoryForm
+        p Tags
+        br
+        +formTC('/admin/tagCreate')
+        table#tagsResults.display
+            thead
+                tr
+                th Id
+                th ame
+                th Color
+                th Visible
+            tbody
+        p Categories
+        br
+        +formTC('/admin/categoryCreate')
+        table#categoriesResults.display
+            thead
+                tr
+                th Id
+                th ame
+                th Color
+                th Visible
+            tbody
+    block scripts
+        script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
+        link(rel='stylesheet', type='text/css', href='https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css')
+        script(type='text/javascript', charset='utf8', src='https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js')
+        script.
+            $(document).ready( function () {
+                var columns = [
+                        { data: 'id' },
+                        { data: 'name' },
+                        { data: 'color' },
+                        { data: 'visible' }
+                    ];
+                var tables = { tags: $('#tagsResults').DataTable( {
+                    paging: true,
+                    scrollY: 400,
+                    columns: columns
+                }),  categories: $('#categoriesResults').DataTable({
+                    paging: true,
+                    scrollY: 400,
+                    columns: columns
+                })}
+                $('form').on('submit', function(event) {
+                    var data = {}
+                    $.each($(this).serializeArray(), function() {
+                        if (data[this.name]) {
+                            if (!data[this.name].push) {
+                                data[this.name] = [data[this.name]];
+                            }
+                            data[this.name].push(this.value || '');
+                        } else {
+                            data[this.name] = this.value || '';
+                        }
+                    });
+                    console.log(JSON.stringify(data))
+                    $.ajax({
+                        data: data,
+                        type: 'POST',
+                        url: $(this).attr('action'),
+                        dataType: 'json',
+                        success: function(data){
+                            console.log(data)
+                            table = tables[data['table']]
+                            console.log(table)
+                            if(table){
+                                table.clear().draw();
+                                table.rows.add(data['result']).draw();
+                            }
+                        }
+                    })
+                    event.preventDefault();
+                });
+            });

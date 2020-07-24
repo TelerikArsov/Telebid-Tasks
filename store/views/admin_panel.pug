@@ -1,1 +1,12 @@
-h3= username
+if(username)
+    h3= username
+    a(href='/admin/create_worker')
+        h2='Create worker'
+    a(href='/admin/create_tc')
+        h2='Create Tags/Categories'
+    a(href='/admin/create_items')
+        h2='Create Items'
+    form(action='/logout', method='POST')
+        input(type='submit', value='Logout')
+else
+    h3= "Stranger"

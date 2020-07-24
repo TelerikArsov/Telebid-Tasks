@@ -1,0 +1,21 @@
+mixin formTC(path)
+    form(action=path, method='POST')
+        label(for='name') Name:
+        br
+        input(type='text', name='name', value='')
+        br
+        label(for='color') Color string: 
+        br
+        input(type='text', name='color', value='')
+        br
+        label(for='visible') Visible:
+        br 
+        select(name='visible')
+            option(value='True') True
+            option(value='False') False
+        br
+        ul.errors
+            if errors
+                for error in errors
+                    li #{error.msg}
+        input(type='submit', value='Submit')
