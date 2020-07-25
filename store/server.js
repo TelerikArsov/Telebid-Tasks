@@ -14,6 +14,7 @@ app.use(session({secret: process.env.SESSIONSECRET,
     resave: false}));
 app.use(bodyParser.json());      
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static('public'))
 app.set('views', './views');
 app.set('view engine', 'pug');
 
@@ -119,12 +120,57 @@ app.post('/admin/create_worker', [
     handleErrors(req, res, db.createWorker, 'register_worker');
 });
 
+
+var tableActions = {get: 
+    {
+        tags: db.getAllTags,
+        categories: db.getAllCategories
+    },
+    delete: 
+    {
+        tags: db.deleteTag,
+        categories: db.deleteCategory
+    },
+    edit:
+    {
+        tags: db.editTags,
+        categories: db.editCategory
+    }
+};
+
+app.post('/admin/getAll/:table', function(req, res){
+    if(tableActions.get[req.params['table']]){
+        tableActions.get[req.params['table']](req, res)
+    }
+});
+app.post('/admin/delete/:table', function(req, res){
+    if(tableActions.delete[req.params['table']]){
+        tableActions.delete[req.params['table']](req, res)
+    }
+});
+
+app.post('/admin/edit/:table', function(req, res){
+    if(tableActions.edit[req.params['table']]){
+        tableActions.edit[req.params['table']](req, res)
+    }
+});
+
+
+// refactor be like at the top
 app.post('/admin/tagCreate', [
     check('name').notEmpty().withMessage('Username is required'),
     check('color').notEmpty().withMessage('Color is required')
 ], function(req, res) {
     console.log(req.body)
     handleErrors(req, res, db.createTag, 'create_tc');
+});
+
+app.post('/admin/categoryCreate', [
+    check('name').notEmpty().withMessage('Username is required'),
+    check('color').notEmpty().withMessage('Color is required')
+], function(req, res) {
+    console.log(req.body)
+    handleErrors(req, res, db.createCategory, 'create_tc');
 });
 
 app.post('/login', [

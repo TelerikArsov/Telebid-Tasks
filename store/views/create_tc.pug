@@ -1,27 +1,42 @@
 body
     block content
+        link(rel='stylesheet', type='text/css', href='/stylesheets/create_tc.css')
         include mixins/tagCategoryForm
         p Tags
         br
         +formTC('/admin/tagCreate')
-        table#tagsResults.display
+        button#tags.refresh Refresh
+        #tagsEdit.modal
+            .modal-content
+                span.close ×
+                +formTC('/admin/edit/tags')
+        table#tagsResults.display(table='tags')
             thead
                 tr
                 th Id
-                th ame
+                th Name
                 th Color
                 th Visible
+                th
+                th 
             tbody
         p Categories
         br
         +formTC('/admin/categoryCreate')
-        table#categoriesResults.display
+        button#categories.refresh Refresh
+        #categoriesEdit.modal
+            .modal-content
+                span.close ×
+                +formTC('/admin/edit/categories')
+        table#categoriesResults.display(table='categories')
             thead
                 tr
                 th Id
-                th ame
+                th Name
                 th Color
                 th Visible
+                th
+                th 
             tbody
     block scripts
         script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
@@ -33,7 +48,9 @@ body
                         { data: 'id' },
                         { data: 'name' },
                         { data: 'color' },
-                        { data: 'visible' }
+                        { data: 'visible' },
+                        { targets: -1, data: null, defaultContent: "<button class='editRecord'>Edit</button>"},
+                        { targets: -1, data: null, defaultContent: "<button class='deleteRecord'>X</button>"}
                     ];
                 var tables = { tags: $('#tagsResults').DataTable( {
                     paging: true,
@@ -44,8 +61,53 @@ body
                     scrollY: 400,
                     columns: columns
                 })}
+                var editId = null;
+                $('.display tbody').on( 'click', 'button.editRecord', function () {
+                    //prefil data todo
+                    var modal = $(`#${$(this).parents('table').attr('table')}Edit`);
+                    modal.on('click', '.close', function(){ modal.css("display","none"); console.log(modal)});
+                    modal.css("display","block");
+                    editId = tables[$(this).parents('table').attr('table')]
+                    .row( $(this).parents('tr') ).data()['id'];
+                } );
+                $('.display tbody').on( 'click', 'button.deleteRecord', function () {
+                    var data = tables[$(this).parents('table').attr('table')]
+                    .row( $(this).parents('tr') ).data();
+                    if(confirm(`Delete record with Id: ${data['id']} and Name: ${data['name']}`)){
+                        console.log(data)
+                        $.ajax({
+                            data: {id: data['id']},
+                            type: 'POST',
+                            url: "/admin/delete/" + $(this).parents('table').attr('table'),
+                            dataType: 'json',
+                            success: function(data){
+                                table = tables[data['table']]
+                                if(table){
+                                    table.clear().draw();
+                                    table.rows.add(data['result']).draw();
+                                }
+                            }
+                        });
+                    }
+                } );
+                $('.refresh').on('click', function(e){
+                    $.ajax({
+                        type: 'POST',
+                        url: "/admin/getAll/" + $(this).attr('id'),
+                        success: function(data){
+                            table = tables[data['table']]
+                            if(table){
+                                table.clear().draw();
+                                table.rows.add(data['result']).draw();
+                            }
+                        }
+                    })
+                });
                 $('form').on('submit', function(event) {
                     var data = {}
+                    if($(this).parent().attr('class') == "modal-content") {
+                        data['id'] = editId;
+                    }
                     $.each($(this).serializeArray(), function() {
                         if (data[this.name]) {
                             if (!data[this.name].push) {
@@ -56,7 +118,7 @@ body
                             data[this.name] = this.value || '';
                         }
                     });
-                    console.log(JSON.stringify(data))
+                    console.log(data)
                     $.ajax({
                         data: data,
                         type: 'POST',
@@ -70,6 +132,7 @@ body
                                 table.clear().draw();
                                 table.rows.add(data['result']).draw();
                             }
+                            editId = null;
                         }
                     })
                     event.preventDefault();

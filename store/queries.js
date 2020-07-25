@@ -102,12 +102,13 @@ const loginWorker = (req, res) => {
 
 //TAGS
 
-function tcCreate(table, args){
+function tcCreate(table, args, callback, cb_args){
     pool.query('INSERT INTO ' + table + ' (name, color, visible) VALUES ($1, $2, $3)',
     args, (error, results) => {
         if (error) {
             throw error
         }
+        callback(...cb_args)
     })
 }
 function getAll(req, res, table){
@@ -116,24 +117,81 @@ function getAll(req, res, table){
         if (error) {
             throw error
         }
-        console.log(results.rows)
         res.json({table: table, result: results.rows})
+    })
+}
+
+function tcDelete(table, args, callback, cb_args){
+    pool.query('DELETE FROM ' + table + ' WHERE id = $1',
+    args, (error, results) => {
+        if (error) {
+            throw error
+        }
+        callback(...cb_args)
+    })
+}
+
+function tcEdit(table, args, callback, cb_args){
+    pool.query('UPDATE ' + table + ' SET name = $2, color = $3, visible = $4 WHERE id = $1',
+    args, (error, results) => {
+        if (error) {
+            throw error
+        }
+        callback(...cb_args)
     })
 }
 
 const createTag = (req, res) => {
     if(req.session.user && req.session.role == "admin"){
-        console.log(req.body)
         const { name, color, visible } = req.body
-        tcCreate('tags', [name, color, visible])
+        tcCreate('tags', [name, color, visible], getAll, [req, res, 'tags'])
+    }
+}
+
+const deleteTag = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id } = req.body
+        tcDelete('tags', [id], getAll, [req, res, 'tags'])
+    }
+}
+
+const getAllTags = (req, res) =>{
+    if(req.session.user && req.session.role == "admin"){
         getAll(req, res, 'tags')
     }
 }
+
+const editTags = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id, name, color, visible } = req.body
+        tcEdit('tags', [id, name, color, visible], getAll, [req, res, 'tags'])
+    }
+}
+
 const createCategory = (req, res) => {
     if(req.session.user && req.session.role == "admin"){
         const { name, color, visible } = req.body
-        tcCreate('categories', [name, color, visible])
+        tcCreate('categories', [name, color, visible], getAll, [req, res, 'categories'])
+    }
+}
+
+const deleteCategory = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id } = req.body
+        tcDelete('categories', [id], getAll, [req, res, 'categories'])
+    }
+}
+
+const getAllCategories = (req, res) =>{
+    if(req.session.user && req.session.role == "admin"){
         getAll(req, res, 'categories')
+    }
+}
+
+const editCategory = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id, name, color, visible } = req.body
+        tcEdit('categories', [id, name, color, visible], getAll, [req, res, 'categories'])
     }
 }
 
@@ -146,5 +204,11 @@ module.exports = {
     createWorker,
     loginWorker,
     createTag,
-    createCategory
+    deleteTag,
+    getAllTags,
+    editTags,
+    createCategory,
+    deleteCategory,
+    getAllCategories,
+    editCategory
   }
