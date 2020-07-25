@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const { compileClientWithDependenciesTracked } = require('pug');
 const pool = new Pool({
     user: process.env.PGUSER,
     host: process.env.PGHOST,
@@ -195,6 +196,63 @@ const editCategory = (req, res) => {
     }
 }
 
+//product
+
+function getAllProductsFunc(req, res){ 
+    pool.query('Select p.id, p.name, manifacturer, description, cost, c.name as category, p.visible FROM products as p LEFT JOIN categories as c ON c.id = p.category_id;',
+    (error, results)=> {
+        if (error) {
+            throw error
+        }
+        res.json({table: 'products', result: results.rows})
+    })
+}
+
+const createProduct = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { name, manifacturer, description, cost, category, visible } = req.body
+        pool.query('INSERT INTO products (name, manifacturer, description, cost, category_id, visible) VALUES ($1, $2, $3, $4, $5, $6)',
+        [name, manifacturer, description, cost, category, visible], (error, results) => {
+            if (error) {
+                throw error
+            }
+            getAllProductsFunc(req, res)
+        })
+    }
+}
+
+const deleteProduct = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id } = req.body
+        console.log(id)
+        pool.query('DELETE FROM products WHERE id = $1',
+        [id], (error, results) => {
+            if (error) {
+                throw error
+            }
+            getAllProductsFunc(req, res)
+        })
+    }
+}
+
+const getAllProducts = (req, res) =>{
+    if(req.session.user && req.session.role == "admin"){
+        getAllProductsFunc(req, res)
+    }
+}
+
+const editProduct = (req, res) => {
+    if(req.session.user && req.session.role == "admin"){
+        const { id, name, manifacturer, description, cost, category, visible } = req.body
+        pool.query('UPDATE products SET name = $2, manifacturer = $3, description = $4, cost = $5, category_id = $6, visible = $7 WHERE id = $1',
+        [id, name, manifacturer, description, cost, category, visible], (error, results) => {
+            if (error) {
+                throw error
+            }
+            getAllProductsFunc(req, res)
+        })
+    }
+}
 
 module.exports = {
     createUser,
@@ -210,5 +268,9 @@ module.exports = {
     createCategory,
     deleteCategory,
     getAllCategories,
-    editCategory
-  }
+    editCategory,
+    createProduct,
+    deleteProduct,
+    getAllProducts,
+    editProduct
+}

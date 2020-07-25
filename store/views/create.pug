@@ -38,6 +38,27 @@ body
                 th
                 th 
             tbody
+        p Products
+        br
+        +formProduct('/admin/productCreate')
+        button#products.refresh Refresh
+        #productsEdit.modal
+            .modal-content
+                span.close ×
+                +formProduct('/admin/edit/products')
+        table#productsResults.display(table='products')
+            thead
+                tr
+                th Id
+                th Name
+                th Manufacturer
+                th Description
+                th Cost
+                th Category
+                th Visible
+                th
+                th 
+            tbody
     block scripts
         script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
         link(rel='stylesheet', type='text/css', href='https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css')
@@ -52,6 +73,17 @@ body
                         { targets: -1, data: null, defaultContent: "<button class='editRecord'>Edit</button>"},
                         { targets: -1, data: null, defaultContent: "<button class='deleteRecord'>X</button>"}
                     ];
+                var productColumns = [
+                        { data: 'id' },
+                        { data: 'name' },
+                        { data: 'manifacturer' },
+                        { data: 'description' },
+                        { data: 'cost' },
+                        { data: 'category' },
+                        { data: 'visible' },
+                        { targets: -1, data: null, defaultContent: "<button class='editRecord'>Edit</button>"},
+                        { targets: -1, data: null, defaultContent: "<button class='deleteRecord'>X</button>"}
+                    ];
                 var tables = { tags: $('#tagsResults').DataTable( {
                     paging: true,
                     scrollY: 400,
@@ -60,7 +92,10 @@ body
                     paging: true,
                     scrollY: 400,
                     columns: columns
-                })}
+                }), products: $('#productsResults').DataTable({
+                    paging: true,
+                    scrollY: 400,
+                    columns: productColumns})}
                 var editId = null;
                 $('.display tbody').on( 'click', 'button.editRecord', function () {
                     //prefil data todo
@@ -103,11 +138,30 @@ body
                         }
                     })
                 });
+                $(".productCategoryRefresh").on('click', function(e) {
+                    var select = $(this).siblings('.productCategory')
+                    select.empty();
+                    $.ajax({
+                        type: 'POST',
+                        url: '/admin/getAll/categories',
+                        success: function (data) {
+                            $.each(data['result'], function(_, value){
+                                console.log(value.id + " " + value.name)
+                                select.append($('<option>', { 
+                                    value: value.id.toString(10),
+                                    text : value.name 
+                                }));
+                            });
+
+                        }
+                    })
+                });
                 $('form').on('submit', function(event) {
                     var data = {}
                     if($(this).parent().attr('class') == "modal-content") {
                         data['id'] = editId;
                     }
+                    console.log($(this).serializeArray())
                     $.each($(this).serializeArray(), function() {
                         if (data[this.name]) {
                             if (!data[this.name].push) {

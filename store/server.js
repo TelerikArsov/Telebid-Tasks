@@ -49,8 +49,8 @@ app.get('/admin', function(req, res){
 app.get('/admin/create_worker', function(req, res){
     res.render('register_worker');
 });
-app.get('/admin/create_tc', function(req, res){
-    res.render('create_tc');
+app.get('/admin/create', function(req, res){
+    res.render('create');
 });
 
 
@@ -124,17 +124,20 @@ app.post('/admin/create_worker', [
 var tableActions = {get: 
     {
         tags: db.getAllTags,
-        categories: db.getAllCategories
+        categories: db.getAllCategories,
+        products: db.getAllProducts
     },
     delete: 
     {
         tags: db.deleteTag,
-        categories: db.deleteCategory
+        categories: db.deleteCategory,
+        products: db.deleteProduct
     },
     edit:
     {
         tags: db.editTags,
-        categories: db.editCategory
+        categories: db.editCategory,
+        products: db.editProduct
     }
 };
 
@@ -162,7 +165,7 @@ app.post('/admin/tagCreate', [
     check('color').notEmpty().withMessage('Color is required')
 ], function(req, res) {
     console.log(req.body)
-    handleErrors(req, res, db.createTag, 'create_tc');
+    handleErrors(req, res, db.createTag, 'create');
 });
 
 app.post('/admin/categoryCreate', [
@@ -170,7 +173,19 @@ app.post('/admin/categoryCreate', [
     check('color').notEmpty().withMessage('Color is required')
 ], function(req, res) {
     console.log(req.body)
-    handleErrors(req, res, db.createCategory, 'create_tc');
+    handleErrors(req, res, db.createCategory, 'create');
+});
+
+app.post('/admin/productCreate', [
+    check('name').notEmpty().withMessage('Username is required'),
+    check('manifacturer').notEmpty().withMessage('Manufacturer is required'),
+    check('description').notEmpty().withMessage('Description is required'),
+    check('cost').notEmpty().withMessage('Cost is required'),
+    check('category').notEmpty().withMessage('Category is required'),
+    check('visible').notEmpty().withMessage('Visibillity is required')
+], function(req, res) {
+    console.log(req.body)
+    handleErrors(req, res, db.createProduct, 'create');
 });
 
 app.post('/login', [
